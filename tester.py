@@ -14,13 +14,13 @@ c_cost = -0.005
 k_trn = -1.5
 k_hwy = -1.0
 
-torch.set_default_device('mps')
+torch.set_default_device('cuda')
 
 # Set environment variables for OpenMP
 # os.environ["OMP_NUM_THREADS"] = "8"  # Adjust this value based on your experiments
 # os.environ["MKL_NUM_THREADS"] = "8"  # Adjust this value based on your experiments
 
-torch.set_num_threads(4)
+#torch.set_num_threads(4)
 
 def init_data():
 
