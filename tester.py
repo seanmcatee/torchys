@@ -59,8 +59,8 @@ if __name__ == '__main__':
 
     timer_number = 10
 
-    hwy_time = timeit.timeit(setup="data = init_data()", stmt="hwy_util(data)", number=timer_number, globals=globals())
-    trn_time = timeit.timeit(setup="data = init_data()", stmt="trn_util(data)", number=timer_number, globals=globals())
+    hwy_time = timeit.timeit(setup="data = init_data(); hwy_util(data)", stmt="hwy_util(data)", number=timer_number, globals=globals())
+    trn_time = timeit.timeit(setup="data = init_data(); trn_util(data)", stmt="trn_util(data)", number=timer_number, globals=globals())
 
     print(f"Highway Time: {hwy_time}")
     print(f"Transit Time: {trn_time}")

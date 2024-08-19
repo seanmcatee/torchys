@@ -15,6 +15,7 @@ util = var * coeff + K # 2x slower on CPU!
 
  - When using the GPU, running the same operation more times adds significant speed improvements
    * Mac's GPU seems to win when running 10 at a time.
+   * Adding a single first run before timing the operation results in faster and more consistent time results. Ramp-up must be an issue.
 
  TODO:
   - Test on other machines?
