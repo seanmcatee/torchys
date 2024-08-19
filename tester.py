@@ -29,9 +29,12 @@ def init_data():
     data["trn_time"] = torch.rand(N_ZONES, N_ZONES)
     data["trn_fare"] = torch.rand(N_ZONES, N_ZONES)
 
+    # a little warm up operation:
+    tmp = torch.add(data["hwy_time"], data["trn_time"], alpha=0.5)
+
     return data
 
-def hwy_util(data):
+def calc_hwy_util(data):
 
     # Compute hwy utility - very simple (0.25 sec for 10 runs) - but faster on CUDA
     # hwy_util = data["hwy_time"] * c_ivtt + k_hwy
@@ -41,7 +44,9 @@ def hwy_util(data):
 
     #print("hwy_util mean:", hwy_util.mean())
 
-def trn_util(data):
+    return hwy_util
+
+def calc_trn_util(data):
 
     # Compute trn utility - very simple (0.5352 sec for 10 runs)
     # trn_util = data["trn_time"] * c_ivtt + data["trn_fare"] * c_cost + k_trn
@@ -53,16 +58,50 @@ def trn_util(data):
     trn_util.add_(data["trn_fare"], alpha=c_cost)
 
     # print("trn_util mean:", trn_util.mean())
+
+    return trn_util
+
+def calc_logsum_stacked(utils):
+
+    # Calculate logsum - manual calcs
+    # logsum = torch.log(torch.exp(hwy_util) + torch.exp(trn_util))
+
+    # Calculate logusm - using torch.logsumexp
+    logsum = torch.logsumexp(utils, dim=0)   
+
+    # print("logsum mean:", logsum.mean())
     
+    return logsum
+
+def calc_logsum(hwy_util, trn_util):
+
+    # Calculate logsum - manual calcs
+    # logsum = torch.log(torch.exp(hwy_util) + torch.exp(trn_util))
+
+    # Calculate logsum - logaddexp
+    logsum = torch.logaddexp(hwy_util, trn_util)
+
+    # print("logsum mean:", logsum.mean())
+    
+    return logsum
 
 if __name__ == '__main__':
 
     timer_number = 10
 
-    hwy_time = timeit.timeit(setup="data = init_data(); hwy_util(data)", stmt="hwy_util(data)", number=timer_number, globals=globals())
-    trn_time = timeit.timeit(setup="data = init_data(); trn_util(data)", stmt="trn_util(data)", number=timer_number, globals=globals())
+    #hwy_time = timeit.timeit(setup="data = init_data()", stmt="calc_hwy_util(data)", number=timer_number, globals=globals())
+    #trn_time = timeit.timeit(setup="data = init_data()", stmt="calc_trn_util(data)", number=timer_number, globals=globals())
 
-    print(f"Highway Time: {hwy_time}")
-    print(f"Transit Time: {trn_time}")
+
+
+    # with pre-stack to better test performance of different options
+    logsum_time = timeit.timeit(setup="data = init_data(); utils = torch.stack((calc_hwy_util(data), calc_trn_util(data)))", stmt="calc_logsum_stacked(utils)", number=timer_number, globals=globals())
+
+    # without pre-stack
+    # logsum_time = timeit.timeit(setup="data = init_data(); hwy_util = calc_hwy_util(data); trn_util = calc_trn_util(data)", stmt="calc_logsum(hwy_util, trn_util)", number=timer_number, globals=globals())
+
+    #print(f"Highway Time: {hwy_time}")
+    #print(f"Transit Time: {trn_time}")
+    print(f"Logsum Time: {logsum_time}")
 
     # print(torch.__config__.parallel_info())
