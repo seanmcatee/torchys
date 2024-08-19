@@ -61,25 +61,16 @@ def calc_trn_util(data):
 
     return trn_util
 
-def calc_logsum_stacked(utils):
+def calc_logsum(utils):
 
     # Calculate logsum - manual calcs
-    # logsum = torch.log(torch.exp(hwy_util) + torch.exp(trn_util))
-
-    # Calculate logusm - using torch.logsumexp
-    logsum = torch.logsumexp(utils, dim=0)   
-
-    # print("logsum mean:", logsum.mean())
-    
-    return logsum
-
-def calc_logsum(hwy_util, trn_util):
-
-    # Calculate logsum - manual calcs
-    # logsum = torch.log(torch.exp(hwy_util) + torch.exp(trn_util))
+    # logsum = torch.log(torch.exp(utils[0]) + torch.exp(utils[1]))
 
     # Calculate logsum - logaddexp
-    logsum = torch.logaddexp(hwy_util, trn_util)
+    logsum = torch.logaddexp(utils[0], utils[1])
+
+    # Calculate logusm - using torch.logsumexp
+    # logsum = torch.logsumexp(utils, dim=0)   
 
     # print("logsum mean:", logsum.mean())
     
@@ -95,10 +86,7 @@ if __name__ == '__main__':
 
 
     # with pre-stack to better test performance of different options
-    logsum_time = timeit.timeit(setup="data = init_data(); utils = torch.stack((calc_hwy_util(data), calc_trn_util(data)))", stmt="calc_logsum_stacked(utils)", number=timer_number, globals=globals())
-
-    # without pre-stack
-    # logsum_time = timeit.timeit(setup="data = init_data(); hwy_util = calc_hwy_util(data); trn_util = calc_trn_util(data)", stmt="calc_logsum(hwy_util, trn_util)", number=timer_number, globals=globals())
+    logsum_time = timeit.timeit(setup="data = init_data(); utils = torch.stack((calc_hwy_util(data), calc_trn_util(data)))", stmt="calc_logsum(utils)", number=timer_number, globals=globals())
 
     #print(f"Highway Time: {hwy_time}")
     #print(f"Transit Time: {trn_time}")
