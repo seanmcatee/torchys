@@ -14,13 +14,13 @@ c_cost = -0.005
 k_trn = -1.5
 k_hwy = -1.0
 
-torch.set_default_device('cpu')
+torch.set_default_device('mps')
 
 # Set environment variables for OpenMP
-os.environ["OMP_NUM_THREADS"] = "1"  # Adjust this value based on your experiments
-os.environ["MKL_NUM_THREADS"] = "1"  # Adjust this value based on your experiments
+# os.environ["OMP_NUM_THREADS"] = "8"  # Adjust this value based on your experiments
+# os.environ["MKL_NUM_THREADS"] = "8"  # Adjust this value based on your experiments
 
-torch.set_num_threads(1)
+torch.set_num_threads(4)
 
 def init_data():
 
@@ -47,7 +47,19 @@ def trn_util(data):
     # trn_util = data["trn_time"] * c_ivtt + data["trn_fare"] * c_cost + k_trn
 
     # Compute trn utility, with the add function and alpha parameter ()
-    trn_util = torch.add(torch.add(torch.tensor([k_trn]), data["trn_time"], alpha=c_ivtt), data["trn_fare"], alpha=c_cost)
+    # trn_util = torch.add(torch.add(torch.tensor([k_trn]), data["trn_time"], alpha=c_ivtt), data["trn_fare"], alpha=c_cost)
+
+    # Explicity with individual functions, 
+    # Uses the add with alpha, but avoids unnecessary memory allocation
+    ## trn_util = torch.zeros(N_ZONES, N_ZONES)
+    ## trn_util.add_(data["trn_time"], alpha=c_ivtt)
+    ## trn_util.add_(data["trn_fare"], alpha=c_cost)
+    ## trn_util.add_(k_trn)
+
+    #Also minimizing the number of operations
+    # -- This seems to be fastest both with CPU and GPU --
+    trn_util = torch.add(k_trn, data["trn_time"], alpha=c_ivtt)
+    trn_util.add_(data["trn_fare"], alpha=c_cost)
 
     # print("trn_util mean:", trn_util.mean())
     
@@ -56,7 +68,7 @@ if __name__ == '__main__':
 
     timer_number = 10
 
-    time = timeit.timeit(setup="data = init_data()", stmt="hwy_util(data)", number=timer_number, globals=globals())
+    time = timeit.timeit(setup="data = init_data()", stmt="trn_util(data)", number=timer_number, globals=globals())
 
 
     print(f"Time: {time}")
