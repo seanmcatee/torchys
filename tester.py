@@ -25,9 +25,9 @@ k_hwy = -1.0
 def init_data():
 
     data = {}
-    data["hwy_time"] = torch.rand(N_ZONES, N_ZONES)
-    data["trn_time"] = torch.rand(N_ZONES, N_ZONES)
-    data["trn_fare"] = torch.rand(N_ZONES, N_ZONES)
+    data["hwy_time"] = torch.rand(N_ZONES, N_ZONES, dtype=torch.float32)
+    data["trn_time"] = torch.rand(N_ZONES, N_ZONES, dtype=torch.float32)
+    data["trn_fare"] = torch.rand(N_ZONES, N_ZONES, dtype=torch.float32)
 
     # a little warm up operation:
     tmp = torch.add(data["hwy_time"], data["trn_time"], alpha=0.5)
@@ -64,10 +64,10 @@ def calc_trn_util(data):
 def calc_logsum(utils):
 
     # Calculate logsum - manual calcs
-    # logsum = torch.log(torch.exp(utils[0]) + torch.exp(utils[1]))
+    logsum = torch.log(torch.exp(utils[0]) + torch.exp(utils[1]))
 
     # Calculate logsum - logaddexp
-    logsum = torch.logaddexp(utils[0], utils[1])
+    # logsum = torch.logaddexp(utils[0], utils[1])
 
     # Calculate logusm - using torch.logsumexp
     # logsum = torch.logsumexp(utils, dim=0)   
@@ -80,16 +80,16 @@ if __name__ == '__main__':
 
     timer_number = 10
 
-    #hwy_time = timeit.timeit(setup="data = init_data()", stmt="calc_hwy_util(data)", number=timer_number, globals=globals())
-    #trn_time = timeit.timeit(setup="data = init_data()", stmt="calc_trn_util(data)", number=timer_number, globals=globals())
+    hwy_time = timeit.timeit(setup="data = init_data()", stmt="calc_hwy_util(data)", number=timer_number, globals=globals())
+    trn_time = timeit.timeit(setup="data = init_data()", stmt="calc_trn_util(data)", number=timer_number, globals=globals())
 
 
 
     # with pre-stack to better test performance of different options
     logsum_time = timeit.timeit(setup="data = init_data(); utils = torch.stack((calc_hwy_util(data), calc_trn_util(data)))", stmt="calc_logsum(utils)", number=timer_number, globals=globals())
 
-    #print(f"Highway Time: {hwy_time}")
-    #print(f"Transit Time: {trn_time}")
+    print(f"Highway Time: {hwy_time}")
+    print(f"Transit Time: {trn_time}")
     print(f"Logsum Time: {logsum_time}")
 
     # print(torch.__config__.parallel_info())
