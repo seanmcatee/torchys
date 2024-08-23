@@ -1,6 +1,19 @@
 # torchys
 Tinkering with Pytorch to learn how it can speed things up
 
+## WINDOWS INSTALL ISSUE
+
+If you get an error about fbgemm.dll, there is a missing dependency.
+
+Install MS Visual Studio Community Edition
+Install only the individual component:
+  MSVC v143 - VS 2022 C++ x64/x86 build tools
+
+https://github.com/pytorch/pytorch/issues/131662#issuecomment-2252589253
+
+This is being actively worked on and will likely be corrected in PyTorch v 2.4.1
+(As of 8/23/2024)
+
 ## Lessons Learned:
 
  - Using the add funciton with a scale value alpha is 2x faster than separate operations.
